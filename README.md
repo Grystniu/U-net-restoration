@@ -7,4 +7,4 @@
 <h3 align="center">Пример визуализации результатов</h3>
 <p align="center"><img src="https://github.com/Grystniu/U-net-restoration/blob/main/forReadMe/OutputData.png" alt="OutputData"></p>
 <h3 align="center">Авторы</h3>
-<ul><li>(@Grystniu)</li><li>(@Sorramina)</li></ul>
+<ul><li><a href="https://github.com/Grystniu" target="_blank">@Grystniu</a></li><li><a href="https://github.com/Sorramina" target="_blank">@Sorramina</a></li></ul>
