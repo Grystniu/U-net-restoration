@@ -127,3 +127,49 @@ def load_unet(model_name="unet"):
     print(f"Модель {model_name} успешно загружена.")
 
     return loaded_model
+
+
+def read_single_image_and_save(path, save_path, model=None):
+    processed_images = []
+
+    for file_name in os.listdir(path):
+        file_path = os.path.join(path, file_name)
+        if os.path.isfile(file_path):
+            # Чтение и изменение размера изображения
+            image = Image.open(file_path).resize((128, 128))
+            image = np.asarray(image)
+
+            # Преобразование цветного изображения в оттенки серого, если необходимо
+            if len(image.shape) > 2:
+                image = np.dot(image[..., :3], [0.2989, 0.587, 0.114])
+
+            # Нормализация значений пикселей к диапазону [0, 1]
+            max_val, min_val = image.max(), image.min()
+            image = (image - min_val) / (max_val - min_val)
+
+            # Предсказание, если передана модель
+            if model is not None:
+                prediction = model(np.expand_dims(image, axis=(
+                    0, -1)).astype('float32'), training=False)
+                processed_images.append(prediction[0, :, :, 0])
+
+                # Сохранение предсказанного изображения
+                save_prediction_path = os.path.join(save_path, f"{file_name}")
+                save_prediction = Image.fromarray(
+                    (prediction[0, :, :, 0] * 255).numpy().astype('uint8'))
+                save_prediction.save(save_prediction_path)
+            else:
+                processed_images.append(image)
+
+            # Сохранение обработанного изображения
+            # save_file_path = os.path.join(save_path, file_name)
+            # save_image = Image.fromarray((image * 255).astype('uint8'))
+            # save_image.save(save_file_path)
+
+    # Преобразование списка изображений в массив и добавление размерности
+    return np.expand_dims(processed_images, axis=-1).astype('float32')
+
+
+# Передайте вашу обученную модель в параметр model
+# model = load
+# processed_images = read_single_image_and_save(source_folder, destination_folder, model=model)
