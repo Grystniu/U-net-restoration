@@ -6,6 +6,8 @@ import os
 from keras.models import model_from_json
 
 # Функция загрузки модели U-Net
+
+
 @st.cache_resource()
 def load_unet(model_name="unet"):
     current_directory = os.path.dirname(os.path.abspath(__file__))
@@ -20,6 +22,8 @@ def load_unet(model_name="unet"):
     return loaded_model
 
 # Функция для чтения изображения
+
+
 def read_image(file):
     image = Image.open(file).resize((128, 128))
     image = np.asarray(image)
@@ -31,6 +35,8 @@ def read_image(file):
     return np.expand_dims(image, axis=-1).astype('float32')
 
 # Функция для предсказания и сохранения результатов модели
+
+
 def print_model_outputs(model, input_X_list, title_list, output_directory):
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
@@ -43,6 +49,8 @@ def print_model_outputs(model, input_X_list, title_list, output_directory):
         Image.fromarray(restored_image).save(image_path)
 
 # Функция для нарезки и сохранения изображений
+
+
 def crop_and_save(image_path, output_directory, size=128):
     img = Image.open(image_path)
     width, height = img.size
@@ -58,6 +66,8 @@ def crop_and_save(image_path, output_directory, size=128):
             region.save(os.path.join(output_directory, filename))
 
 # Функция для склеивания изображений
+
+
 def merge_squares(input_directory, output_path, final_width, final_height):
     files = os.listdir(input_directory)
     merged_image = Image.new("RGB", (final_width, final_height))
@@ -68,7 +78,7 @@ def merge_squares(input_directory, output_path, final_width, final_height):
             merged_image.paste(img, (i, j))
     merged_image.save(output_path)
 
-# Интерфейс Streamlit
+
 st.write("Веб-приложение для восстановления волновой картины данных сейсморазведки")
 st.write("Процесс запуска приложения состоит из нескольких шагов:")
 st.write("1. Загрузка модели U-Net, которая была предварительно обучена на данных сейсморазведки.")
@@ -76,38 +86,39 @@ st.write("2. Загрузка сканированных изображений 
 st.write("3. Обработка загруженных изображений с использованием модели U-Net для восстановления волновой картины данных.")
 st.write("4. Визуализация результата восстановления на веб-странице с помощью Streamlit.")
 
-# Загрузка модели
+
 unet = load_unet()
 
-# Виджет для загрузки основного изображения
-main_image = st.file_uploader("Загрузка исходного изображения", type=["png", "jpg", "jpeg"])
 
-# Кнопка для запуска предсказаний
+main_image = st.file_uploader(
+    "Загрузка исходного изображения", type=["png", "jpg", "jpeg"])
+
+
 if main_image and st.button("Predict"):
-    # Нарезка основного изображения
+
     output_directory = "/app/data/2/"
     cropped_directory = '/app/data/1/'
 
     os.makedirs(output_directory, exist_ok=True)
     os.makedirs(cropped_directory, exist_ok=True)
-   
-    # Сохранение загруженного изображения для дальнейшей обработки
+
     temp_image_path = "/app/data/temp_image.png"
     with open(temp_image_path, "wb") as f:
         f.write(main_image.getbuffer())
 
     crop_and_save(temp_image_path, cropped_directory)
 
-    # Предсказания для нарезанных изображений
     input_images = os.listdir(cropped_directory)
-    input_X_list = [np.expand_dims(read_image(os.path.join(cropped_directory, img)), axis=0) for img in input_images]
+    input_X_list = [np.expand_dims(read_image(os.path.join(
+        cropped_directory, img)), axis=0) for img in input_images]
     title_list = input_images
     print_model_outputs(unet, input_X_list, title_list, output_directory)
 
-    # Склеивание предсказанных изображений
     output_image_path = "/app/data/output_image.jpg"
-    final_width, final_height = 17664, 3200  # Установите финальные размеры изображения
-    merge_squares(output_directory, output_image_path, final_width, final_height)
+    final_width, final_height = 17664, 3200
+    merge_squares(output_directory, output_image_path,
+                  final_width, final_height)
 
     # Вывод результата
-    st.image(output_image_path, caption='Merged Image', use_column_width=True, clamp=True)
+    st.image(output_image_path, caption='Merged Image',
+             use_column_width=True, clamp=True)
